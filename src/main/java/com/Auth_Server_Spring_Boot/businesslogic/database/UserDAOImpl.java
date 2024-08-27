@@ -2,7 +2,6 @@ package com.Auth_Server_Spring_Boot.businesslogic.database;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -32,7 +31,7 @@ public class UserDAOImpl implements UserDAO {
         String queryMessage = String.format("FROM User WHERE username='%s'", username);
         TypedQuery<User> query = entityManager.createQuery(queryMessage, User.class);
 
-        return query.getSingleResult();
+        return query.getResultStream().findFirst().orElse(null);
     }
 
     @Override
@@ -40,19 +39,13 @@ public class UserDAOImpl implements UserDAO {
         return entityManager.find(User.class, id);
     }
 
-    @Transactional
     @Override
-    public void save(User user) {
-        entityManager.persist(user);
+    public User save(User user) {
+        // if id is 0, new user is added
+        // if id is > 0, user is updated
+        return entityManager.merge(user);
     }
 
-    @Transactional
-    @Override
-    public void update(User user) {
-        entityManager.merge(user);
-    }
-
-    @Transactional
     @Override
     public void delete(int userId) {
         User user = entityManager.find(User.class, userId);
